@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Sign up · Pin Book{% endblock %}
+{% block content %}
+<h1>Sign up</h1>
+<form method="post" class="auth">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label>Username
+    <input type="text" name="username" required minlength="3" maxlength="32"
+           autocomplete="username">
+  </label>
+  <label>Password
+    <input type="password" name="password" required minlength="6"
+           autocomplete="new-password">
+  </label>
+  <button type="submit">Create my pin book</button>
+</form>
+<p>Already have an account? <a href="{{ url_for('login') }}">Log in</a>.</p>
+{% endblock %}

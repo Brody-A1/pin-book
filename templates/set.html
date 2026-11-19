@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ s.set_name }} ({{ s.year }}) · Pin Book{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('browse_year', year=s.year) }}">← {{ s.year }} sets</a></p>
+<h1>{{ s.set_name }}</h1>
+<p class="meta">{{ s.park }} · {{ s.wave }} · {{ s.year }}</p>
+{% if current_user %}
+<p class="progress">You own {{ owned }} of {{ pins|length }} chasers in this set.</p>
+{% endif %}
+<div class="cards">
+  {% for p in pins %}
+  <article class="card">
+    {% if p.image_url %}
+    <img src="{{ p.image_url }}" alt="{{ p.pin_name }}" loading="lazy"
+         onerror="this.style.display='none'">
+    {% endif %}
+    <h2>{{ p.pin_name }}</h2>
+    <p>
+      <span class="badge {{ p.tier }}">{{ 'Super Chaser' if p.tier == 'super_chaser' else 'Chaser' }}</span>
+    </p>
+    <p class="ids">
+      {% if p.pinpics_id %}PinPics {{ p.pinpics_id }}{% endif %}
+      {% if p.pinpics_id and p.pinpop_id %} · {% endif %}
+      {% if p.pinpop_id %}Pin &amp; Pop #{{ p.pinpop_id }}{% endif %}
+    </p>
+    {% if current_user %}
+    <form method="post" action="{{ url_for('toggle') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="pin_id" value="{{ p.id }}">
+      <input type="hidden" name="set_id" value="{{ s.id }}">
+      <button type="submit" class="{{ 'owned' if p.owned else '' }}">
+        {{ '✓ Owned — tap to remove' if p.owned else 'I own this pin' }}
+      </button>
+    </form>
+    {% endif %}
+  </article>
+  {% endfor %}
+</div>
+<p class="note">Common pins for this set are coming soon. This page currently
+lists the set's verified chaser{{ 's' if pins|length != 1 }} only — no
+pins have been invented to fill it out.</p>
+{% if not current_user %}
+<p><a href="{{ url_for('login') }}">Log in</a> to check off pins you own.</p>
+{% endif %}
+{% endblock %}

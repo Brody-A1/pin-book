@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ year }} Chasers · Pin Book{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('index') }}">← All years</a></p>
+<h1>{{ year }} Chasers</h1>
+<ul class="set-list">
+  {% for s in sets %}
+  <li>
+    <a href="{{ url_for('set_page', set_id=s.id) }}">
+      <strong>{{ s.set_name }}</strong>
+      <span>{{ s.park }} · {{ s.wave }}</span>
+      <span>{{ s.pins }} chaser{{ 's' if s.pins != 1 }}
+        {% if current_user %}· {{ s.owned }} owned{% endif %}</span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}My Collection · Pin Book{% endblock %}
+{% block content %}
+<h1>My Collection</h1>
+<p>You own <strong>{{ total_owned }}</strong> chaser{{ 's' if total_owned != 1 }}.</p>
+{% if not progress %}
+<p>Nothing checked off yet. Browse a year, open a set, and tap
+“I own this pin” on the ones you have.</p>
+{% endif %}
+{% for g in progress %}
+<section class="collection-set">
+  <h2><a href="{{ url_for('set_page', set_id=g.set_id) }}">{{ g.set_name }}</a>
+    <span class="meta">{{ g.park }} · {{ g.wave }} · {{ g.year }}</span></h2>
+  <p class="progress">{{ g.owned }} of {{ g.total }} chasers owned in this set.</p>
+  <div class="cards">
+    {% for p in g.pins %}
+    <article class="card small">
+      {% if p.image_url %}
+      <img src="{{ p.image_url }}" alt="{{ p.pin_name }}" loading="lazy"
+           onerror="this.style.display='none'">
+      {% endif %}
+      <h2>{{ p.pin_name }}</h2>
+      <p><span class="badge {{ p.tier }}">{{ 'Super Chaser' if p.tier == 'super_chaser' else 'Chaser' }}</span></p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% endblock %}

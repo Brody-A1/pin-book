@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Hidden Disney Chasers</h1>
+<p>Pick a year to browse its sets, then check off the pins you own.
+{% if current_user %}
+  You own <strong>{{ owned }}</strong> of {{ total }} chasers so far.
+{% else %}
+  <a href="{{ url_for('register') }}">Sign up</a> or
+  <a href="{{ url_for('login') }}">log in</a> to save your own collection.
+{% endif %}</p>
+<ul class="year-list">
+  {% for y in years %}
+  <li>
+    <a href="{{ url_for('browse_year', year=y.year) }}">
+      <strong>{{ y.year }}</strong>
+      <span>{{ y.sets }} sets · {{ y.pins }} chasers</span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+<p class="note">This book lists chaser and super chaser pins. The common pins
+in each set are coming soon — nothing here is guessed or filled in.</p>
+{% endblock %}
