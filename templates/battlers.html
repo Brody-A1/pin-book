@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}My Battlers · Pin Book{% endblock %}
+{% block content %}
+<h1>My Battlers</h1>
+<p>One battler for every pin you own. Pick one and
+<a href="{{ url_for('battle') }}">battle the computer</a>.</p>
+{% if not roster %}
+<p>No battlers yet — check off pins in your collection and they'll
+show up here.</p>
+{% endif %}
+<div class="cards">
+  {% for b in roster %}
+  <article class="card">
+    <h2>{{ b.species }}</h2>
+    <p>
+      <span class="badge {{ b.element }}">{{ b.element|capitalize }}</span>
+      <span class="badge {{ b.tier }}">{{ 'Super Chaser' if b.tier == 'super_chaser' else ('Chaser' if b.tier == 'chaser' else 'Common') }}</span>
+    </p>
+    <p class="meta">{{ b.blurb }}</p>
+    <p>HP {{ b.max_hp }} · Attack {{ b.atk }} · Defense {{ b.def }}</p>
+    <p>Special: <strong>{{ b.special }}</strong> ({{ b.special_power }})</p>
+    <p class="ids">Unlocked by your {{ b.pin_name }} pin ({{ b.set_name }})</p>
+    <form method="post" action="{{ url_for('battle') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="action" value="start">
+      <input type="hidden" name="pin_id" value="{{ b.pin_id }}">
+      <button type="submit">Battle with {{ b.species }}</button>
+    </form>
+  </article>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -12,6 +12,8 @@
   <nav>
     {% if current_user %}
       <a href="{{ url_for('collection') }}">My Collection</a>
+      <a href="{{ url_for('battlers_page') }}">My Battlers</a>
+      <a href="{{ url_for('battle') }}">Battle</a>
       <span class="user">{{ session.get('username') }}</span>
       <form method="post" action="{{ url_for('logout') }}" class="inline">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

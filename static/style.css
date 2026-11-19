@@ -67,6 +67,19 @@ a { color: #1f5fa8; }
 }
 .badge.super_chaser { background: #fde68a; color: #713f12; }
 .badge.common { background: #e5e7eb; color: #374151; }
+.badge.ember { background: #fee2e2; color: #991b1b; }
+.badge.tide { background: #dbeafe; color: #1e40af; }
+.badge.leaf { background: #dcfce7; color: #166534; }
+.badge.volt { background: #fef9c3; color: #854d0e; }
+.badge.frost { background: #e0f2fe; color: #075985; }
+.badge.stone { background: #e7e5e4; color: #44403c; }
+.battle { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.75rem; align-items: center; margin: 1rem 0; }
+.versus { text-align: center; font-weight: 800; font-size: 1.25rem; }
+.hp { font-weight: 700; }
+.moves { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin: 1rem 0; }
+.moves button { margin-top: 0; }
+.result { font-size: 1.25rem; font-weight: 800; }
+.battle-log { line-height: 1.6; }
 .ids { color: #666; font-size: 0.85rem; }
 button, .card button {
   width: 100%; padding: 0.7rem; margin-top: 0.5rem;

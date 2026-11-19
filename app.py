@@ -16,10 +16,12 @@ There is no payment/subscription layer in v1; the users.plan column exists
 so one can be added later (see README.md "Adding payments later").
 """
 import os
+import random
 import secrets
 import sqlite3
 from functools import wraps
 
+import battlers
 from flask import (
     Flask, abort, flash, g, redirect, render_template, request,
     session, url_for,
@@ -229,6 +231,132 @@ def collection():
     total_owned = len(rows)
     return render_template("collection.html", progress=progress,
                            total_owned=total_owned)
+
+
+@app.route("/battlers")
+@login_required
+def battlers_page():
+    """The user's battlers: one per owned pin."""
+    db = get_db()
+    rows = db.execute("""
+        SELECT s.set_name, p.id AS pin_id, p.pin_name, p.tier
+        FROM ownership o
+        JOIN pins p ON p.id = o.pin_id
+        JOIN sets s ON s.id = p.set_id
+        WHERE o.user_id = ?
+        ORDER BY s.set_name, p.pin_name
+    """, (session["user_id"],)).fetchall()
+    roster = [battlers.battler_for_pin(r) for r in rows]
+    return render_template("battlers.html", roster=roster)
+
+
+def _owned_battler(pin_id):
+    """Battler dict for one of the current user's owned pins, or None."""
+    db = get_db()
+    row = db.execute("""
+        SELECT s.set_name, p.id AS pin_id, p.pin_name, p.tier
+        FROM ownership o
+        JOIN pins p ON p.id = o.pin_id
+        JOIN sets s ON s.id = p.set_id
+        WHERE o.user_id = ? AND p.id = ?
+    """, (session["user_id"], pin_id)).fetchone()
+    if row is None:
+        return None
+    return battlers.battler_for_pin(row)
+
+
+@app.route("/battle", methods=["GET", "POST"])
+@login_required
+def battle():
+    """Turn-based 1v1 vs the computer. Battle state lives in session."""
+    if request.method == "POST":
+        check_csrf()
+        action = request.form.get("action", "")
+        if action == "start":
+            pin_id = request.form.get("pin_id", type=int)
+            mine = _owned_battler(pin_id)
+            if mine is None:
+                flash("Pick one of your own battlers.")
+                return redirect(url_for("battle"))
+            foe = battlers.random_ai_battler()
+            session["battle"] = {
+                "player": dict(mine, hp=mine["max_hp"], defending=False),
+                "foe": dict(foe, hp=foe["max_hp"], defending=False),
+                "log": [f"A wild {foe['species']} appeared!"],
+                "over": False,
+                "winner": None,
+            }
+            return redirect(url_for("battle"))
+        if action == "end":
+            session.pop("battle", None)
+            return redirect(url_for("battle"))
+        if action == "move":
+            state = session.get("battle")
+            if not state or state.get("over"):
+                return redirect(url_for("battle"))
+            move = request.form.get("move", "attack")
+            player, foe = state["player"], state["foe"]
+            log = state["log"]
+            # --- player's turn ---
+            if move == "defend":
+                player["defending"] = True
+                log.append(f"{player['species']} braces for impact.")
+            else:
+                elemental = move == "special"
+                power = player["special_power"] if elemental else 12
+                dmg, note = battlers.calc_damage(player, foe, power, elemental)
+                if foe.get("defending"):
+                    dmg = max(1, dmg // 2)
+                    foe["defending"] = False
+                    note = (note + " " if note else "") + "(Blocked!)"
+                foe["hp"] = max(0, foe["hp"] - dmg)
+                verb = player["special"] if elemental else "Attack"
+                log.append(f"{player['species']} used {verb} — {dmg} damage. {note}".strip())
+            if foe["hp"] <= 0:
+                state["over"] = True
+                state["winner"] = "player"
+                log.append(f"Wild {foe['species']} fainted! You win!")
+                session["battle"] = state
+                return redirect(url_for("battle"))
+            # --- computer's turn ---
+            ai_move = random.choices(["attack", "special", "defend"],
+                                     weights=[60, 25, 15])[0]
+            if ai_move == "defend":
+                foe["defending"] = True
+                log.append(f"Wild {foe['species']} braces for impact.")
+            else:
+                elemental = ai_move == "special"
+                power = foe["special_power"] if elemental else 12
+                dmg, note = battlers.calc_damage(foe, player, power, elemental)
+                if player.get("defending"):
+                    dmg = max(1, dmg // 2)
+                    player["defending"] = False
+                    note = (note + " " if note else "") + "(Blocked!)"
+                player["hp"] = max(0, player["hp"] - dmg)
+                verb = foe["special"] if elemental else "Attack"
+                log.append(f"Wild {foe['species']} used {verb} — {dmg} damage. {note}".strip())
+            if player["hp"] <= 0:
+                state["over"] = True
+                state["winner"] = "foe"
+                log.append(f"Your {player['species']} fainted! Wild {foe['species']} wins.")
+            session["battle"] = state
+            return redirect(url_for("battle"))
+        return redirect(url_for("battle"))
+
+    state = session.get("battle")
+    roster = None
+    if state is None:
+        db = get_db()
+        rows = db.execute("""
+            SELECT s.set_name, p.id AS pin_id, p.pin_name, p.tier
+            FROM ownership o
+            JOIN pins p ON p.id = o.pin_id
+            JOIN sets s ON s.id = p.set_id
+            WHERE o.user_id = ?
+            ORDER BY s.set_name, p.pin_name
+        """, (session["user_id"],)).fetchall()
+        roster = [battlers.battler_for_pin(r) for r in rows]
+    return render_template("battle.html", state=state, roster=roster)
 
 
 @app.route("/register", methods=["GET", "POST"])

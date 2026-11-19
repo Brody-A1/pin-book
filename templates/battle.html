@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Battle · Pin Book{% endblock %}
+{% block content %}
+<h1>Battle</h1>
+{% if state is none %}
+  <p>Pick one of your battlers and fight a wild battler.</p>
+  {% if not roster %}
+  <p>No battlers yet — check off pins in your collection first.</p>
+  {% endif %}
+  <div class="cards">
+    {% for b in roster %}
+    <article class="card">
+      <h2>{{ b.species }}</h2>
+      <p>
+        <span class="badge {{ b.element }}">{{ b.element|capitalize }}</span>
+        <span class="badge {{ b.tier }}">{{ 'Super Chaser' if b.tier == 'super_chaser' else ('Chaser' if b.tier == 'chaser' else 'Common') }}</span>
+      </p>
+      <p>HP {{ b.max_hp }} · Attack {{ b.atk }} · Defense {{ b.def }}</p>
+      <p>Special: <strong>{{ b.special }}</strong> ({{ b.special_power }})</p>
+      <p class="ids">From your {{ b.pin_name }} pin ({{ b.set_name }})</p>
+      <form method="post" action="{{ url_for('battle') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="action" value="start">
+        <input type="hidden" name="pin_id" value="{{ b.pin_id }}">
+        <button type="submit">Battle with {{ b.species }}</button>
+      </form>
+    </article>
+    {% endfor %}
+  </div>
+{% else %}
+  {% set p = state.player %}{% set f = state.foe %}
+  <div class="battle">
+    <section class="card">
+      <h2>{{ p.species }} (you)</h2>
+      <p><span class="badge {{ p.element }}">{{ p.element|capitalize }}</span></p>
+      <p class="hp">HP {{ p.hp }} / {{ p.max_hp }}</p>
+      <p>Attack {{ p.atk }} · Defense {{ p.def }} · Special: {{ p.special }} ({{ p.special_power }})</p>
+    </section>
+    <p class="versus">VS</p>
+    <section class="card">
+      <h2>Wild {{ f.species }}</h2>
+      <p><span class="badge {{ f.element }}">{{ f.element|capitalize }}</span></p>
+      <p class="hp">HP {{ f.hp }} / {{ f.max_hp }}</p>
+      <p>Attack {{ f.atk }} · Defense {{ f.def }} · Special: {{ f.special }} ({{ f.special_power }})</p>
+    </section>
+  </div>
+  {% if state.over %}
+    <p class="result">{% if state.winner == 'player' %}🎉 You win!{% else %}Wild {{ f.species }} wins this time.{% endif %}</p>
+    <form method="post" action="{{ url_for('battle') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="action" value="end">
+      <button type="submit">Battle again</button>
+    </form>
+  {% else %}
+    <form method="post" action="{{ url_for('battle') }}" class="moves">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="action" value="move">
+      <button type="submit" name="move" value="attack">Attack</button>
+      <button type="submit" name="move" value="special">{{ p.special }}</button>
+      <button type="submit" name="move" value="defend">Defend</button>
+    </form>
+    <form method="post" action="{{ url_for('battle') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="action" value="end">
+      <button type="submit" class="linklike">Run away</button>
+    </form>
+  {% endif %}
+  <h2>Battle log</h2>
+  <ul class="battle-log">
+    {% for line in state.log|reverse %}
+    <li>{{ line }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+<p class="note">Type matchups: Ember beats Leaf and Frost. Tide beats Ember and Stone.
+Leaf beats Tide and Stone. Volt beats Tide and Frost. Frost beats Leaf and Stone.
+Stone beats Ember and Volt. A super-effective special hits twice as hard.</p>
+{% endblock %}
