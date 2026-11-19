@@ -5,7 +5,7 @@
 <h1>{{ s.set_name }}</h1>
 <p class="meta">{{ s.park }} · {{ s.wave }} · {{ s.year }}</p>
 {% if current_user %}
-<p class="progress">You own {{ owned }} of {{ pins|length }} chasers in this set.</p>
+<p class="progress">You own {{ owned }} of {{ pins|length }} pins in this set.</p>
 {% endif %}
 <div class="cards">
   {% for p in pins %}
@@ -16,7 +16,7 @@
     {% endif %}
     <h2>{{ p.pin_name }}</h2>
     <p>
-      <span class="badge {{ p.tier }}">{{ 'Super Chaser' if p.tier == 'super_chaser' else 'Chaser' }}</span>
+      <span class="badge {{ p.tier }}">{{ 'Super Chaser' if p.tier == 'super_chaser' else ('Chaser' if p.tier == 'chaser' else 'Common') }}</span>
     </p>
     <p class="ids">
       {% if p.pinpics_id %}PinPics {{ p.pinpics_id }}{% endif %}
@@ -36,9 +36,8 @@
   </article>
   {% endfor %}
 </div>
-<p class="note">Common pins for this set are coming soon. This page currently
-lists the set's verified chaser{{ 's' if pins|length != 1 }} only — no
-pins have been invented to fill it out.</p>
+<p class="note">This page lists the set's verified pins — chasers and commons.
+No pins have been invented to fill it out.</p>
 {% if not current_user %}
 <p><a href="{{ url_for('login') }}">Log in</a> to check off pins you own.</p>
 {% endif %}

@@ -66,6 +66,7 @@ a { color: #1f5fa8; }
   background: #dbeafe; color: #1e40af;
 }
 .badge.super_chaser { background: #fde68a; color: #713f12; }
+.badge.common { background: #e5e7eb; color: #374151; }
 .ids { color: #666; font-size: 0.85rem; }
 button, .card button {
   width: 100%; padding: 0.7rem; margin-top: 0.5rem;
